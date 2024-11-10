@@ -1,7 +1,8 @@
 import altair as alt
 import pandas as pd
 import streamlit as st
-import datetime 
+import datetime
+from datetime import datetime 
 from datetime import date,timedelta
 import matplotlib.pyplot as plt
 
@@ -10,6 +11,7 @@ st.set_page_config(page_title="Charts", page_icon="📈")
 
 st.title("Chart Creator")
 
+st.write("Since the example CSV was made in 2023, if you are trying this app out make sure to look at the dates in the CSV to appropriately select for the ranges so graphs show up. If you just want to see how it works, select January 1st 2023 - Janurary 31st 2023.")
 
 
 PaymentStatus = st.selectbox(
@@ -36,7 +38,7 @@ today = datetime.now()
 days180 = date.today() - timedelta(days=180)
 
 StartDate = st.date_input("Start Date (Default 180 Days Prior)", days180)
-EndDate = st.date_input("Start Date (Default 180 Days Prior)", today)
+EndDate = st.date_input("End Date (Default 180 Days Prior)", today)
 
 dfpreclean = st.file_uploader("Select CSV File")
 
@@ -86,13 +88,18 @@ else:
 
 
 if PaymentCountry == 'US':
-    df = df[df['Country']=='US']
+    df = df[df['Country'] == 'US']
 elif PaymentCountry == 'UK':
-    df = df[df['Country']=='UK']
+    df = df[df['Country'] == 'UK']
 elif PaymentCountry == 'AU':
-    df = df[df['Country']== 'AU']
+    df = df[df['Country'] == 'AU']
 else:
     pass
+
+StartDate = pd.to_datetime(StartDate)
+EndDate = pd.to_datetime(EndDate)
+
+df = df[(df['Day'] >= StartDate) & (df['Day'] <= EndDate)]
 
 
 StartDate = pd.to_datetime(StartDate)
@@ -101,67 +108,61 @@ EndDate = pd.to_datetime(EndDate)
 df = df[(df['Day'] >= StartDate)&(df['Day'] <= EndDate)]
 
 chart1 = alt.Chart(df).mark_bar().encode(
-    alt.x("Total:Q", bin=True),
-    y='count()'
+    alt.X("Total:Q", bin=True),
+    y='count()',
 ).properties(
     title={
-        "text": ["Count of Transactions"],
-        "subtitle": [f"Payment Status: {PaymentStatus}",f"Payment Method: {PaymentMethod}",f"Payment Application: {PaymentApplication}",f"Payment Country: {PaymentCountry}",f"Start Date: {StartDate}",f"End Date: {EndDate}",]
+      "text": ["Count of Transactions"], 
+      "subtitle": [f"Payment Status: {PaymentStatus}", f"Payment Method: {PaymentMethod}", f"Payment Application: {PaymentApplication}", f"Payment Country: {PaymentCountry}",  f"Start Date: {StartDate}", f"End Date: {EndDate}",],
     },
-    width = 800,
-    height = 500
+    width=800,
+    height=500
 )
 
-
-chart2 = alt.Chart(df).mark_boxplot(extent = "min-max").encode(
-    x='int_created_date:0',
-    y='Total:q'
+chart2 = alt.Chart(df).mark_boxplot(extent='min-max').encode(
+    x='int_created_date:O',
+    y='Total:Q'
 ).properties(
     title={
-        "text": ["Box/Whisker By Month"],
-        "subtitle": [f"Payment Status: {PaymentStatus}",f"Payment Method: {PaymentMethod}",f"Payment Application: {PaymentApplication}",f"Payment Country: {PaymentCountry}",f"Start Date: {StartDate}",f"End Date: {EndDate}",]
+      "text": ["Box & Whisker By Month"], 
+      "subtitle": [f"Payment Status: {PaymentStatus}", f"Payment Method: {PaymentMethod}", f"Payment Application: {PaymentApplication}", f"Payment Country: {PaymentCountry}",  f"Start Date: {StartDate}", f"End Date: {EndDate}",],
     },
-    width = 800,
-    height = 500
+    width=800,
+    height=500
 )
 
 
 bar3 = alt.Chart(df).mark_bar().encode(
-    x=alt.X('int_created_date:0', title='Date'),
+    x=alt.X('int_created_date:O', title='Date'),
     y=alt.Y('sum(Total):Q', title='Total'),
-    color = alt.color('Type:N', title='Payment Type')
+    color=alt.Color('Type:N', title='Payment Type')
 )
 
-
-chart3 =  (bar3).properties(
+chart3 = (bar3).properties(
     title={
-        "text": ["Box Plot Sum Transactions By Month"],
-        "subtitle": [f"Payment Status: {PaymentStatus}",f"Payment Method: {PaymentMethod}",f"Payment Application: {PaymentApplication}",f"Payment Country: {PaymentCountry}",f"Start Date: {StartDate}",f"End Date: {EndDate}",]
+        "text": ["Box Plot Mean Transaction Per Month"], 
+        "subtitle": [f"Payment Status: {PaymentStatus}", f"Payment Method: {PaymentMethod}", f"Payment Application: {PaymentApplication}", f"Payment Country: {PaymentCountry}",  f"Start Date: {StartDate}", f"End Date: {EndDate}",],
     },
-    width = 800,
-    height = 500
+    width=800,
+    height=500
 )
-
-
-
 
 bar4 = alt.Chart(df).mark_bar().encode(
-    x=alt.X('int_created_date:0', title='Date'),
-    y=alt.Y('count(Total):Q', title='Total'),
-    color = alt.color('Type:N', title='Payment Type')
+    x=alt.X('int_created_date:O', title='Date'),
+    y=alt.Y('count(Total):Q', title='Count'),
+    color=alt.Color('Type:N', title='Payment Type')
 )
 
-
-chart4 =  (bar4).properties(
+chart4 = (bar4).properties(
     title={
-        "text": ["Box Plot Count Transactions By Month"],
-        "subtitle": [f"Payment Status: {PaymentStatus}",f"Payment Method: {PaymentMethod}",f"Payment Application: {PaymentApplication}",f"Payment Country: {PaymentCountry}",f"Start Date: {StartDate}",f"End Date: {EndDate}",]
+      "text": ["Box Plot Transaction Count Per Month"], 
+      "subtitle": [f"Payment Status: {PaymentStatus}", f"Payment Method: {PaymentMethod}", f"Payment Application: {PaymentApplication}", f"Payment Country: {PaymentCountry}",  f"Start Date: {StartDate}", f"End Date: {EndDate}",],
     },
-    width = 800,
-    height = 500
+    width=800,
+    height=500
 )
 
-tab1, tab2, tab3, tab4 = st.tabs("Histogram", "Box/Whisker", "Box Plot Sum", "Box Plot Count")
+tab1, tab2, tab3, tab4 = st.tabs(["Histogram", "Box/Whisker", "Box Plot Sum", "Box Plot Count"])
 
 with tab1:
     st.altair_chart(chart1, use_container_width=True)
